@@ -1,19 +1,41 @@
 ---
-- name: apply the common configuration to all hosts
-  hosts: all
+- name: install and start httpd
+  hosts: web0
 
-  roles:
-  - common
+  tasks:
+  - name: install epel repo
+    yum: name=epel-release state=latest
 
-- name: apply the httpd and the web
-  hosts: webservers
+  - name: install python bindings for selinux
+    yum: name={{item}} state=latest
+    with_items:
+    - libselinux-python
+    - libsemanage-python
 
-  roles:
-  - httpd
-  - web
+  - name: test to see if selinux is running
+    command: getenforce
+    register: sestatus
+    changed_when: false
 
-- name: apply the database configuration
-  hosts: dbservers
+  - name: install httpd
+    yum: name=httpd state=latest
+    notify: restart httpd
 
-  roles:
-  - mariadb
+  - name: start httpd service
+    service: name=httpd state=started enabled=yes
+
+  - name: copy index.html
+    template: src=index.html.j2 dest=/var/www/html/index.html
+
+  - name: install firewalld
+    yum: name=firewalld state=latest
+
+  - name: start firewalld service
+    service: name=firewalld state=started enabled=yes
+
+  - name: insert firewalld rule
+    firewalld: service=http permanent=true state=enabled immediate=yes
+
+  handlers:
+  - name: restart httpd
+    service: name=httpd state=restarted
