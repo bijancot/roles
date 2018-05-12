@@ -1,28 +1,37 @@
 ---
 - name: install and start httpd
   hosts: node1
-  become: yes
-  become_user: root
-  become_method: su
 
   tasks:
   - name: install epel repo
     yum: name=epel-release state=latest
+    become: yes
+    become_user: root
+    become_method: su
 
   - name: install python bindings for selinux
     yum: name={{item}} state=latest
     with_items:
     - libselinux-python
     - libsemanage-python
+    become: yes
+    become_user: root
+    become_method: su
 
   - name: test to see if selinux is running
     command: getenforce
     register: sestatus
     changed_when: false
+    become: yes
+    become_user: root
+    become_method: su
 
   - name: install httpd
     yum: name=httpd state=latest
     notify: restart httpd
+    become: yes
+    become_user: root
+    become_method: su
 
   - name: start httpd service
     service: name=httpd state=started enabled=yes
@@ -35,10 +44,19 @@
 
   - name: start firewalld service
     service: name=firewalld state=started enabled=yes
+    become: yes
+    become_user: root
+    become_method: su
 
   - name: insert firewalld rule
     firewalld: service=http permanent=true state=enabled immediate=yes
+    become: yes
+    become_user: root
+    become_method: su
 
   handlers:
   - name: restart httpd
     service: name=httpd state=restarted
+    become: yes
+    become_user: root
+    become_method: su
