@@ -1,6 +1,6 @@
 ---
 - name: install and start httpd
-  hosts: node1
+  hosts: 10.1.1.13
   become: yes
   become_user: root
   become_method: su
